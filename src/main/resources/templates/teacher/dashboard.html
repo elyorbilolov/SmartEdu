@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('O\'qituvchi Kabineti')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Teacher Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-journal-bookmark-fill text-warning me-2"></i> O'qituvchi Shaxsiy Kabineti</h2>
+            <p class="text-muted mb-0">Xush kelibsiz, <span class="fw-semibold text-dark" th:text="${teacher.fullName}">Ustoz</span>!</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-book"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${courses.size()}">0</h3>
+                    <p class="text-muted small mb-0">Biriktirilgan Fanlar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-file-earmark-text"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalAssignments}">0</h3>
+                    <p class="text-muted small mb-0">Faol Topshiriqlar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check2-circle"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalSubmissions}">0</h3>
+                    <p class="text-muted small mb-0">Talabalar Yechimlari</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher's Courses -->
+    <h4 class="fw-bold mb-3"><i class="bi bi-collection me-2 text-primary"></i> Mening Fanlarim</h4>
+
+    <div th:if="${courses.isEmpty()}" class="alert alert-info py-4 text-center">
+        <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+        Sizga hozircha birorta fan biriktirilmagan. Administrator bilan bog'laning.
+    </div>
+
+    <div class="row g-4" th:unless="${courses.isEmpty()}">
+        <div th:each="c : ${courses}" class="col-md-6 col-lg-4">
+            <div class="card h-100 card-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-secondary-subtle text-secondary" th:text="${c.category}">Kategoriya</span>
+                        <span class="badge bg-primary-subtle text-primary fw-bold" th:text="${c.code}">CS101</span>
+                    </div>
+                    <h5 class="card-title fw-bold text-dark mb-2" th:text="${c.title}">Fan Nomi</h5>
+                    <p class="card-text text-muted small flex-grow-1" th:text="${c.description}">Tavsif</p>
+
+                    <hr class="my-3 text-muted">
+
+                    <div class="row text-center mb-3 small text-muted">
+                        <div class="col-4 border-end">
+                            <div class="fw-bold text-dark fs-6" th:text="${c.lessons.size()}">0</div>
+                            <span>Mavzular</span>
+                        </div>
+                        <div class="col-4 border-end">
+                            <div class="fw-bold text-dark fs-6" th:text="${c.assignments.size()}">0</div>
+                            <span>Vazifalar</span>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-dark fs-6" th:text="${c.students.size()}">0</div>
+                            <span>Talaba</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a th:href="@{'/teacher/courses/' + ${c.id}}" class="btn btn-primary">
+                            <i class="bi bi-gear-fill me-1"></i> Fan Ishchi Maydoni
+                        </a>
+                        <a th:href="@{'/reports/course/' + ${c.id} + '/excel'}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Baholar Jurnalini Yuklash (Excel)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

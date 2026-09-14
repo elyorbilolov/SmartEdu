@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${lesson.title})}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container-fluid px-lg-5 py-4">
+    <div class="row g-4">
+        <!-- Main Content Area (Left / Center) -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+                <a th:href="@{'/student/courses/' + ${course.id}}" class="text-decoration-none text-muted small mb-2 d-inline-block">
+                    <i class="bi bi-arrow-left me-1"></i> <span th:text="${course.title}">Fan</span>ga qaytish
+                </a>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h2 class="fw-bold text-dark mb-0" th:text="${lesson.title}">Dars Mavzusi</h2>
+                    <form th:action="@{'/student/lessons/' + ${lesson.id} + '/toggle-progress'}" method="post">
+                        <input type="hidden" name="courseId" th:value="${course.id}">
+                        <button type="submit" class="btn" th:classappend="${completed ? 'btn-success' : 'btn-outline-secondary'}">
+                            <i class="bi" th:classappend="${completed ? 'bi-check-circle-fill' : 'bi-circle'}"></i>
+                            <span th:text="${completed ? 'O\'zlashtirildi' : 'O\'zlashtirildi deb belgilash'}">Belgilash</span>
+                        </button>
+                    </form>
+                </div>
+
+                <hr class="text-muted">
+
+                <!-- Video Player if available -->
+                <div th:if="${lesson.videoUrl != null and !lesson.videoUrl.isBlank()}" class="mb-4">
+                    <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm">
+                        <iframe th:src="${lesson.videoUrl}" title="Dars videosi" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- Lecture Content -->
+                <div class="lead fs-6 text-dark" style="white-space: pre-line; line-height: 1.8;" th:text="${lesson.content}">
+                    Dars ma'ruzasi matni
+                </div>
+            </div>
+
+            <!-- Downloadable Materials Section -->
+            <div class="card border-0 shadow-sm p-4 rounded-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-paperclip text-primary me-2"></i> O'quv Materiallari va Manbalar</h5>
+
+                <div th:if="${materials.isEmpty()}" class="text-muted small fst-italic">
+                    Ushbu dars uchun biriktirilgan materiallar mavjud emas.
+                </div>
+
+                <div class="d-flex flex-column gap-2" th:unless="${materials.isEmpty()}">
+                    <div th:each="m : ${materials}" class="d-flex justify-content-between align-items-center p-3 rounded-3 border bg-light">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi fs-4" th:classappend="${m.fileType == 'PDF' ? 'bi-file-earmark-pdf-fill text-danger' : (m.fileType == 'PPTX' ? 'bi-file-earmark-ppt-fill text-warning' : (m.fileType == 'LINK' ? 'bi-link-45deg text-info' : 'bi-file-earmark-fill text-primary'))}"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-0" th:text="${m.title}">Material nomi</h6>
+                                <small class="text-muted" th:if="${m.filePath != null}" th:text="'Hajmi: ' + ${m.formattedSize}">500 KB</small>
+                                <small class="text-muted" th:if="${m.externalUrl != null}" th:text="${m.externalUrl}">Havola</small>
+                            </div>
+                        </div>
+                        <div>
+                            <a th:if="${m.filePath != null}" th:href="@{'/materials/download/' + ${m.id}}" class="btn btn-primary btn-sm px-3">
+                                <i class="bi bi-download me-1"></i> Yuklab olish
+                            </a>
+                            <a th:if="${m.externalUrl != null}" th:href="${m.externalUrl}" target="_blank" class="btn btn-outline-info btn-sm px-3">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> O'tish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Navigation (Right) -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-3 rounded-4 sticky-top" style="top: 80px;">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-ul me-2 text-primary"></i> Kurs Mundarijasi</h6>
+                <div class="list-group list-group-flush">
+                    <a th:each="l : ${allLessons}" th:href="@{'/student/courses/' + ${course.id} + '/lessons/' + ${l.id}}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-2 rounded-2 mb-1"
+                       th:classappend="${l.id == lesson.id ? 'bg-primary-subtle text-primary fw-bold' : ''}">
+                        <div>
+                            <span class="small me-1" th:text="${l.orderIndex} + '.'">1.</span>
+                            <span class="small" th:text="${l.title}">Mavzu</span>
+                        </div>
+                        <i class="bi bi-chevron-right small text-muted"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

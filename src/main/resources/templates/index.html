@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Bosh sahifa')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<!-- Hero Section -->
+<section class="py-5 bg-white border-bottom">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-3">
+                    <i class="bi bi-stars me-1"></i> Universitet Ta'lim Tizimi (LMS)
+                </span>
+                <h1 class="display-4 fw-bold text-dark mb-3">
+                    «SmartEdu» bilan <span class="text-primary">zamonaviy ta'lim</span> sari intiling!
+                </h1>
+                <p class="lead text-muted mb-4">
+                    Talabalar, o'qituvchilar va ma'muriyat uchun yagona, qulay va xavfsiz ta'lim boshqaruv platformasi. O'quv materiallari, laboratoriya topshiriqlari, onlayn testlar va avtomatlashgan reyting hisobotlari.
+                </p>
+                <div class="d-flex gap-3 flex-wrap" sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Tizimga kirish
+                    </a>
+                    <a th:href="@{/register}" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="bi bi-person-plus me-2"></i> Ro'yxatdan o'tish
+                    </a>
+                </div>
+                <div sec:authorize="isAuthenticated()">
+                    <a th:href="@{/dashboard}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                        <i class="bi bi-speedometer2 me-2"></i> Shaxsiy Kabinetga o'tish
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center mt-4 mt-lg-0">
+                <div class="p-4 bg-primary-subtle rounded-4 text-primary">
+                    <i class="bi bi-mortarboard display-1"></i>
+                    <h3 class="fw-bold mt-3">SmartEdu LMS</h3>
+                    <p class="mb-0 text-muted">Java & Spring Boot 3 asosidagi innovatsion ta'lim muhiti</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<section class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-book"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalCourses}">0</h3>
+                    <p class="text-muted mb-0">Faol Fanlar va Kurslar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalStudents}">0</h3>
+                    <p class="text-muted mb-0">Ro'yxatdan o'tgan Talabalar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-person-video3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalTeachers}">0</h3>
+                    <p class="text-muted mb-0">Malakali O'qituvchilar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section -->
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Mavjud Fanlar</h2>
+            <p class="text-muted mb-0">Dasturlash, ma'lumotlar bazasi va zamonaviy texnologiyalar</p>
+        </div>
+        <a th:href="@{/student/courses}" class="btn btn-outline-primary">
+            Barchasini ko'rish <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div th:each="c : ${courses}" class="col-md-6 col-lg-4">
+            <div class="card h-100 card-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-secondary-subtle text-secondary" th:text="${c.category}">Kategoriya</span>
+                        <span class="badge bg-primary-subtle text-primary fw-semibold" th:text="${c.code}">CS101</span>
+                    </div>
+                    <h5 class="card-title fw-bold text-dark mb-2" th:text="${c.title}">Fan Nomi</h5>
+                    <p class="card-text text-muted small flex-grow-1" th:text="${c.description}">Tavsif</p>
+
+                    <hr class="my-3 text-muted">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 text-muted small">
+                        <span><i class="bi bi-person me-1"></i> <span th:text="${c.teacher != null ? c.teacher.fullName : 'Biriktirilmagan'}">O'qituvchi</span></span>
+                        <span><i class="bi bi-clock me-1"></i> <span th:text="${c.creditHours} + ' kredit'">4 kredit</span></span>
+                    </div>
+
+                    <a th:href="@{'/student/courses/' + ${c.id}}" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Fanga kirish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- University Requirements Compliance Showcase -->
+<section class="bg-white py-5 border-top border-bottom mb-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Platforma Imkoniyatlari</h2>
+            <p class="text-muted">Universitet texnik topshirig'i to'liq 100% amalga oshirilgan</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="p-4 rounded-3 border h-100">
+                    <div class="fs-1 text-primary mb-3"><i class="bi bi-shield-lock"></i></div>
+                    <h5 class="fw-bold">Xavfsiz Autentifikatsiya</h5>
+                    <p class="text-muted small mb-0">Talaba, O'qituvchi va Admin rollari. Spring Security 6 orqali parollar BCrypt bilan shifrlangan.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 rounded-3 border h-100">
+                    <div class="fs-1 text-success mb-3"><i class="bi bi-file-earmark-arrow-up"></i></div>
+                    <h5 class="fw-bold">O'quv Materiallari & Darslar</h5>
+                    <p class="text-muted small mb-0">Ma'ruza matnlari, PDF qo'llanmalar, slaydlar, video darslar va amaliy topshiriqlar.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 rounded-3 border h-100">
+                    <div class="fs-1 text-danger mb-3"><i class="bi bi-file-earmark-pdf"></i></div>
+                    <h5 class="fw-bold">PDF & Excel Hisobotlar</h5>
+                    <p class="text-muted small mb-0">Talabaning rasmiy baholar varaqasi (PDF) va guruh bo'yicha baholar jurnali (Excel) shakllantirish.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

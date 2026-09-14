@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Barcha Fanlar')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-journal-album text-primary me-2"></i> Fanlar Boshqaruvi</h3>
+            <p class="text-muted mb-0">Platformadagi barcha fanlar, o'quv dasturlari va mas'ul o'qituvchilar</p>
+        </div>
+        <a th:href="@{/admin/courses/new}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Yangi Fan Qo'shish
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Kodi</th>
+                        <th>Fan Nomi</th>
+                        <th>Kategoriya</th>
+                        <th>O'qituvchi</th>
+                        <th>Kredit</th>
+                        <th>Talabalar</th>
+                        <th class="text-end">Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c, iter : ${courses}">
+                        <td th:text="${iter.count}">1</td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary fw-bold" th:text="${c.code}">CS101</span>
+                        </td>
+                        <td>
+                            <a th:href="@{'/teacher/courses/' + ${c.id}}" class="fw-bold text-dark text-decoration-none" th:text="${c.title}">Fan Nomi</a>
+                            <div class="small text-muted" th:text="${#strings.abbreviate(c.description, 60)}">Tavsif</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary" th:text="${c.category}">Kategoriya</span>
+                        </td>
+                        <td>
+                            <span th:if="${c.teacher != null}" class="fw-semibold text-dark">
+                                <i class="bi bi-person me-1"></i> <span th:text="${c.teacher.fullName}">O'qituvchi</span>
+                            </span>
+                            <span th:unless="${c.teacher != null}" class="text-muted fst-italic">Biriktirilmagan</span>
+                        </td>
+                        <td th:text="${c.creditHours} + ' soat'">4 soat</td>
+                        <td>
+                            <span class="badge bg-info-subtle text-info"><i class="bi bi-people me-1"></i> <span th:text="${c.students.size()}">0</span></span>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{'/reports/course/' + ${c.id} + '/excel'}" class="btn btn-outline-success" title="Baholar jurnalini yuklash (Excel)">
+                                    <i class="bi bi-file-earmark-excel"></i>
+                                </a>
+                                <a th:href="@{'/teacher/courses/' + ${c.id}}" class="btn btn-outline-primary" title="Fan tafsilotlari">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="@{'/admin/courses/' + ${c.id} + '/edit'}" class="btn btn-outline-secondary" title="Tahrirlash">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{'/admin/courses/' + ${c.id} + '/delete'}" method="post" class="d-inline" onsubmit="return confirm('Rostdan ham ushbu fanni o\'chirmoqchimisiz? Undagi barcha darslar va topshiriqlar ham o\'chiriladi!');">
+                                    <button type="submit" class="btn btn-outline-danger" title="O'chirish">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

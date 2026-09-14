@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yangi Topshiriq')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-file-earmark-plus me-2 text-primary"></i> Yangi Topshiriq Yaratish</h4>
+                    <p class="text-muted small mb-0">Fan: <span class="fw-semibold text-dark" th:text="${course.title}">Fan</span></p>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{'/teacher/courses/' + ${course.id} + '/assignments/new'}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Topshiriq Nomi *</label>
+                            <input type="text" class="form-control" name="title" placeholder="Masalan: 1-Laboratoriya: Klasslar va Obyektlar" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Maksimal Ball</label>
+                                <input type="number" class="form-control" name="maxScore" value="100" min="1" max="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Topshirish Muddati (Deadline)</label>
+                                <input type="datetime-local" class="form-control" name="deadline">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Topshiriq Sharti va Vazifasi</label>
+                            <textarea class="form-control" name="description" rows="5" placeholder="Topshiriq talablari, kirish va chiqish ma'lumotlari, bajarish ko'rsatmalari..."></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Fayl biriktirish (vazifa hujjati, shablon va h.k.)</label>
+                            <input type="file" class="form-control" name="file">
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a th:href="@{'/teacher/courses/' + ${course.id}}" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i> Orqaga</a>
+                            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-1"></i> Topshiriqni Yaratish</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

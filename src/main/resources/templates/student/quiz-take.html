@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${quiz.title})}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- Quiz Header -->
+            <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+                <a th:href="@{'/student/courses/' + ${quiz.course.id}}" class="text-decoration-none text-muted small mb-2 d-inline-block">
+                    <i class="bi bi-arrow-left me-1"></i> <span th:text="${quiz.course.title}">Fan</span>ga qaytish
+                </a>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <h3 class="fw-bold text-dark mb-0" th:text="${quiz.title}">Test Nomi</h3>
+                    <span class="badge bg-primary fs-6 px-3 py-2">
+                        <i class="bi bi-stopwatch me-1"></i> <span th:text="${quiz.timeLimitMinutes} + ' daqiqa'">15 daqiqa</span>
+                    </span>
+                </div>
+                <p class="text-muted small mb-0" th:text="${quiz.description}">Test tavsifi</p>
+            </div>
+
+            <!-- Previous Result if taken before -->
+            <div th:if="${prevResult != null}" class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-primary-subtle text-primary border-primary">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="bi bi-award-fill me-2"></i> Oxirgi Test Natijangiz:</h5>
+                        <p class="mb-0 small">To'g'ri javoblar: <strong th:text="${prevResult.correctAnswers} + ' / ' + ${prevResult.totalQuestions}"></strong></p>
+                    </div>
+                    <div class="text-end">
+                        <span class="display-6 fw-bold" th:text="${#numbers.formatDecimal(prevResult.percentage, 1, 1)} + '%'">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Form -->
+            <div th:if="${questions.isEmpty()}" class="alert alert-warning text-center py-4">
+                Ushbu testda hozircha savollar mavjud emas.
+            </div>
+
+            <form th:action="@{'/student/quizzes/' + ${quiz.id} + '/submit'}" method="post" th:unless="${questions.isEmpty()}">
+                <div class="d-flex flex-column gap-4 mb-4">
+                    <div th:each="q, iter : ${questions}" class="card border shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 fw-bold text-dark">
+                            <span class="badge bg-primary me-2" th:text="${iter.count} + '-savol'">1-savol</span>
+                            <span th:text="${q.questionText}">Savol matni</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-column gap-3">
+                                <div class="form-check p-3 rounded-3 border bg-light">
+                                    <input class="form-check-input ms-0 me-3" type="radio" th:name="'q_' + ${q.id}" th:id="'q_' + ${q.id} + '_A'" value="A" required>
+                                    <label class="form-check-label fw-medium w-100" th:for="'q_' + ${q.id} + '_A'">
+                                        <strong>A)</strong> <span th:text="${q.optionA}">Variant A</span>
+                                    </label>
+                                </div>
+                                <div class="form-check p-3 rounded-3 border bg-light">
+                                    <input class="form-check-input ms-0 me-3" type="radio" th:name="'q_' + ${q.id}" th:id="'q_' + ${q.id} + '_B'" value="B" required>
+                                    <label class="form-check-label fw-medium w-100" th:for="'q_' + ${q.id} + '_B'">
+                                        <strong>B)</strong> <span th:text="${q.optionB}">Variant B</span>
+                                    </label>
+                                </div>
+                                <div class="form-check p-3 rounded-3 border bg-light">
+                                    <input class="form-check-input ms-0 me-3" type="radio" th:name="'q_' + ${q.id}" th:id="'q_' + ${q.id} + '_C'" value="C" required>
+                                    <label class="form-check-label fw-medium w-100" th:for="'q_' + ${q.id} + '_C'">
+                                        <strong>C)</strong> <span th:text="${q.optionC}">Variant C</span>
+                                    </label>
+                                </div>
+                                <div class="form-check p-3 rounded-3 border bg-light">
+                                    <input class="form-check-input ms-0 me-3" type="radio" th:name="'q_' + ${q.id}" th:id="'q_' + ${q.id} + '_D'" value="D" required>
+                                    <label class="form-check-label fw-medium w-100" th:for="'q_' + ${q.id} + '_D'">
+                                        <strong>D)</strong> <span th:text="${q.optionD}">Variant D</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success btn-lg px-5 py-3 shadow" onclick="return confirm('Barcha javoblarni tekshirib, testni yakunlamoqchimisiz?');">
+                        <i class="bi bi-check-circle me-2"></i> Testni Yakunlash va Natijani Ko'rish
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

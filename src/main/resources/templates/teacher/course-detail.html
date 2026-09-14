@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${course.title} + ' - Boshqaruv')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Course Header Banner -->
+    <div class="card bg-white border-0 shadow-sm p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <div class="d-flex gap-2 align-items-center mb-2">
+                    <span class="badge bg-primary" th:text="${course.code}">CS101</span>
+                    <span class="badge bg-secondary-subtle text-secondary" th:text="${course.category}">Kategoriya</span>
+                    <span class="badge bg-info-subtle text-info" th:text="${course.creditHours} + ' kredit'">4 kredit</span>
+                </div>
+                <h2 class="fw-bold text-dark mb-1" th:text="${course.title}">Fan Nomi</h2>
+                <p class="text-muted mb-0" th:text="${course.description}">Fan tavsifi</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a th:href="@{'/reports/course/' + ${course.id} + '/excel'}" class="btn btn-success shadow-sm">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Baholar Jurnali (Excel)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded-3 border shadow-sm" id="courseTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-semibold" id="lessons-tab" data-bs-toggle="pill" data-bs-target="#lessons" type="button">
+                <i class="bi bi-journal-text me-1"></i> Darslar va Materiallar (<span th:text="${lessons.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="assignments-tab" data-bs-toggle="pill" data-bs-target="#assignments" type="button">
+                <i class="bi bi-file-earmark-check me-1"></i> Topshiriqlar (<span th:text="${assignments.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button">
+                <i class="bi bi-patch-question me-1"></i> Testlar (<span th:text="${quizzes.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="announcements-tab" data-bs-toggle="pill" data-bs-target="#announcements" type="button">
+                <i class="bi bi-megaphone me-1"></i> E'lonlar (<span th:text="${announcements.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="students-tab" data-bs-toggle="pill" data-bs-target="#students" type="button">
+                <i class="bi bi-people me-1"></i> Talabalar (<span th:text="${students.size()}">0</span>)
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="courseTabContent">
+
+        <!-- TAB 1: Lessons & Materials -->
+        <div class="tab-pane fade show active" id="lessons" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">O'quv Darslari va Mavzular</h4>
+                <a th:href="@{'/teacher/courses/' + ${course.id} + '/lessons/new'}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Yangi Dars Qo'shish
+                </a>
+            </div>
+
+            <div th:if="${lessons.isEmpty()}" class="alert alert-light border text-center py-4">
+                Hozircha darslar qo'shilmagan. Yuqoridagi tugma orqali yangi dars yarating.
+            </div>
+
+            <div class="accordion d-flex flex-column gap-3" id="lessonsAccordion" th:unless="${lessons.isEmpty()}">
+                <div th:each="l, iter : ${lessons}" class="card border">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary rounded-pill" th:text="${l.orderIndex} + '-dars'">1-dars</span>
+                            <span class="fw-bold fs-6" th:text="${l.title}">Mavzu nomi</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" th:data-bs-target="'#addMaterialModal' + ${l.id}">
+                                <i class="bi bi-file-earmark-plus me-1"></i> Material qo'shish
+                            </button>
+                            <a th:href="@{'/teacher/courses/' + ${course.id} + '/lessons/' + ${l.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{'/teacher/courses/' + ${course.id} + '/lessons/' + ${l.id} + '/delete'}" method="post" class="d-inline" onsubmit="return confirm('Darsni o\'chirmoqchimisiz?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Lesson Content Preview -->
+                        <div th:if="${l.content != null and !l.content.isBlank()}" class="mb-3 text-muted small" style="white-space: pre-line;" th:text="${l.content}">
+                            Dars mazmuni
+                        </div>
+
+                        <!-- Video Link -->
+                        <div th:if="${l.videoUrl != null and !l.videoUrl.isBlank()}" class="mb-3">
+                            <span class="badge bg-danger-subtle text-danger"><i class="bi bi-youtube me-1"></i> Video dars biriktirilgan:</span>
+                            <a th:href="${l.videoUrl}" target="_blank" class="small text-decoration-none ms-1" th:text="${l.videoUrl}">URL</a>
+                        </div>
+
+                        <!-- Materials List -->
+                        <div class="bg-light p-3 rounded-3 border">
+                            <h6 class="fw-bold mb-2 small text-dark"><i class="bi bi-paperclip me-1 text-primary"></i> Biriktirilgan O'quv Materiallari (<span th:text="${l.materials.size()}">0</span>):</h6>
+                            <div th:if="${l.materials.isEmpty()}" class="small text-muted fst-italic">Materiallar mavjud emas</div>
+                            <ul class="list-unstyled mb-0 d-flex flex-column gap-2" th:unless="${l.materials.isEmpty()}">
+                                <li th:each="m : ${l.materials}" class="d-flex justify-content-between align-items-center bg-white p-2 rounded border">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi fs-5" th:classappend="${m.fileType == 'PDF' ? 'bi-file-earmark-pdf-fill text-danger' : (m.fileType == 'PPTX' ? 'bi-file-earmark-ppt-fill text-warning' : 'bi-file-earmark-fill text-primary')}"></i>
+                                        <div>
+                                            <span class="fw-semibold small" th:text="${m.title}">Material nomi</span>
+                                            <span class="text-muted small ms-1" th:if="${m.filePath != null}" th:text="'(' + ${m.formattedSize} + ')'"></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <a th:if="${m.filePath != null}" th:href="@{'/materials/download/' + ${m.id}}" class="btn btn-sm btn-outline-primary py-1">
+                                            <i class="bi bi-download me-1"></i> Yuklab olish
+                                        </a>
+                                        <a th:if="${m.externalUrl != null}" th:href="${m.externalUrl}" target="_blank" class="btn btn-sm btn-outline-info py-1">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> Havola
+                                        </a>
+                                        <form th:action="@{'/teacher/materials/' + ${m.id} + '/delete'}" method="post" class="d-inline" onsubmit="return confirm('Materialni o\'chirmoqchimisiz?');">
+                                            <input type="hidden" name="courseId" th:value="${course.id}">
+                                            <button type="submit" class="btn btn-sm btn-light text-danger py-1"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Material Upload Modal -->
+                    <div class="modal fade" th:id="'addMaterialModal' + ${l.id}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form th:action="@{'/teacher/lessons/' + ${l.id} + '/materials/new'}" method="post" enctype="multipart/form-data">
+                                    <input type="hidden" name="courseId" th:value="${course.id}">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title fw-bold">O'quv Materiali Qo'shish</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Material Nomi *</label>
+                                            <input type="text" class="form-control" name="title" placeholder="Masalan: 1-Mavzu Ma'ruza Matni (PDF)" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Material Turi</label>
+                                            <select class="form-select" name="materialType" id="matTypeSelect">
+                                                <option value="file" selected>Fayl yuklash (PDF, Word, PPTX, ZIP)</option>
+                                                <option value="link">Tashqi havola (URL)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Faylni tanlang</label>
+                                            <input type="file" class="form-control" name="file">
+                                            <small class="text-muted">PDF, PPTX, DOCX, ZIP va b. fayllar qabul qilinadi</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Yoki Havola (URL)</label>
+                                            <input type="url" class="form-control" name="externalUrl" placeholder="https://example.com/resurs">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Bekor qilish</button>
+                                        <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i> Qo'shish</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Assignments -->
+        <div class="tab-pane fade" id="assignments" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">Topshiriqlar va Laboratoriyalar</h4>
+                <a th:href="@{'/teacher/courses/' + ${course.id} + '/assignments/new'}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Yangi Topshiriq Yaratish
+                </a>
+            </div>
+
+            <div th:if="${assignments.isEmpty()}" class="alert alert-light border text-center py-4">
+                Hozircha topshiriqlar yaratilmagan.
+            </div>
+
+            <div class="row g-3" th:unless="${assignments.isEmpty()}">
+                <div th:each="a : ${assignments}" class="col-md-6">
+                    <div class="card h-100 border">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-warning-subtle text-warning fw-semibold">
+                                    Maks: <span th:text="${a.maxScore}">100</span> ball
+                                </span>
+                                <span class="badge bg-light text-muted border" th:if="${a.deadline != null}">
+                                    <i class="bi bi-clock me-1"></i> <span th:text="${#temporals.format(a.deadline, 'dd.MM.yyyy HH:mm')}">Muddati</span>
+                                </span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2" th:text="${a.title}">Topshiriq Nomi</h5>
+                            <p class="text-muted small flex-grow-1" th:text="${a.description}">Tavsif</p>
+
+                            <hr class="my-3 text-muted">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a th:href="@{'/teacher/assignments/' + ${a.id} + '/submissions'}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-check2-square me-1"></i> Yechimlarni Tekshirish (<span th:text="${a.submissions.size()}">0</span>)
+                                </a>
+                                <form th:action="@{'/teacher/assignments/' + ${a.id} + '/delete'}" method="post" class="d-inline" onsubmit="return confirm('Topshiriqni o\'chirmoqchimisiz?');">
+                                    <input type="hidden" name="courseId" th:value="${course.id}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Quizzes -->
+        <div class="tab-pane fade" id="quizzes" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">Onlayn Testlar va Nazoratlar</h4>
+                <a th:href="@{'/teacher/courses/' + ${course.id} + '/quizzes/new'}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Yangi Test Tuzish
+                </a>
+            </div>
+
+            <div th:if="${quizzes.isEmpty()}" class="alert alert-light border text-center py-4">
+                Hozircha onlayn testlar mavjud emas.
+            </div>
+
+            <div class="row g-3" th:unless="${quizzes.isEmpty()}">
+                <div th:each="q : ${quizzes}" class="col-md-6">
+                    <div class="card border">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary-subtle text-primary">
+                                    <i class="bi bi-clock me-1"></i> <span th:text="${q.timeLimitMinutes} + ' daqiqa'">15 daqiqa</span>
+                                </span>
+                                <span class="badge bg-secondary-subtle text-secondary">
+                                    <span th:text="${q.questions.size()}">0</span> ta savol
+                                </span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2" th:text="${q.title}">Test Nomi</h5>
+                            <p class="text-muted small mb-3" th:text="${q.description}">Tavsif</p>
+
+                            <div class="d-flex gap-2">
+                                <a th:href="@{'/teacher/quizzes/' + ${q.id} + '/questions'}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-list-task me-1"></i> Savollarni boshqarish
+                                </a>
+                                <a th:href="@{'/teacher/quizzes/' + ${q.id} + '/results'}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-award me-1"></i> Natijalar (<span th:text="${q.results.size()}">0</span>)
+                                </a>
+                                <form th:action="@{'/teacher/quizzes/' + ${q.id} + '/delete'}" method="post" class="d-inline ms-auto" onsubmit="return confirm('Testni o\'chirmoqchimisiz?');">
+                                    <input type="hidden" name="courseId" th:value="${course.id}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Announcements -->
+        <div class="tab-pane fade" id="announcements" role="tabpanel">
+            <div class="card border mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-megaphone me-2 text-warning"></i> Yangi E'lon Yozish</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{'/teacher/courses/' + ${course.id} + '/announcements/new'}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sarlavha *</label>
+                            <input type="text" class="form-control" name="title" placeholder="Masalan: Oraliq nazorat sanasi belgilandi" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">E'lon Matni *</label>
+                            <textarea class="form-control" name="content" rows="3" placeholder="Barcha talabalar diqqatiga..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-send me-1"></i> E'lon qilish</button>
+                    </form>
+                </div>
+            </div>
+
+            <div th:if="${announcements.isEmpty()}" class="alert alert-light border text-center py-3">
+                Hozircha e'lonlar yo'q.
+            </div>
+
+            <div class="d-flex flex-column gap-3" th:unless="${announcements.isEmpty()}">
+                <div th:each="an : ${announcements}" class="card border">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0" th:text="${an.title}">Sarlavha</h6>
+                            <span class="small text-muted" th:text="${#temporals.format(an.createdAt, 'dd.MM.yyyy HH:mm')}">Sana</span>
+                        </div>
+                        <p class="text-muted small mb-2" style="white-space: pre-line;" th:text="${an.content}">Matn</p>
+                        <form th:action="@{'/teacher/announcements/' + ${an.id} + '/delete'}" method="post" class="text-end" onsubmit="return confirm('E\'lonni o\'chirmoqchimisiz?');">
+                            <input type="hidden" name="courseId" th:value="${course.id}">
+                            <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash me-1"></i> O'chirish</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: Students -->
+        <div class="tab-pane fade" id="students" role="tabpanel">
+            <div class="card border">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-people me-2 text-primary"></i> A'zo Bo'lgan Talabalar</h5>
+                    <a th:href="@{'/reports/course/' + ${course.id} + '/excel'}" class="btn btn-sm btn-success">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel Jurnal
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>F.I.Sh</th>
+                                <th>Login</th>
+                                <th>Email</th>
+                                <th>Telefon</th>
+                                <th class="text-end">Reyting Daftarchasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${students.isEmpty()}">
+                                <td colspan="6" class="text-center py-4 text-muted">Hozircha talabalar bu fanga a'zo bo'lmagan.</td>
+                            </tr>
+                            <tr th:each="s, iter : ${students}">
+                                <td th:text="${iter.count}">1</td>
+                                <td class="fw-bold" th:text="${s.fullName}">Ism</td>
+                                <td><span class="badge bg-light text-dark border" th:text="${s.username}">login</span></td>
+                                <td th:text="${s.email != null ? s.email : '-'}">email</td>
+                                <td th:text="${s.phoneNumber != null ? s.phoneNumber : '-'}">tel</td>
+                                <td class="text-end">
+                                    <a th:href="@{'/reports/student/' + ${s.id} + '/transcript'}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF Hisobot
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

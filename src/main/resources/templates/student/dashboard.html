@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Talaba Kabineti')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Header with greeting and PDF transcript button -->
+    <div class="card bg-white border-0 shadow-sm p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill mb-2">Talaba Kabineti</span>
+                <h2 class="fw-bold mb-1">Xush kelibsiz, <span class="text-primary" th:text="${student.fullName}">Sardor</span>!</h2>
+                <p class="text-muted mb-0">Ta'lim jarayoni, o'zlashtirish foizlari va topshiriqlaringizni monitoring qiling</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a th:href="@{/reports/student/transcript}" class="btn btn-danger shadow-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Reyting Daftarchasi (PDF)
+                </a>
+                <a th:href="@{/student/courses}" class="btn btn-outline-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Yangi Fanga A'zo Bo'lish
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrolled Courses -->
+    <h4 class="fw-bold mb-3"><i class="bi bi-mortarboard me-2 text-primary"></i> Mening Fanlarim (<span th:text="${courses.size()}">0</span>)</h4>
+
+    <div th:if="${courses.isEmpty()}" class="alert alert-info py-4 text-center">
+        <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+        Siz hali birorta fanga a'zo bo'lmagansiz.
+        <a th:href="@{/student/courses}" class="btn btn-primary btn-sm ms-2 mt-2">Barcha fanlar katalogiga o'tish</a>
+    </div>
+
+    <div class="row g-4 mb-5" th:unless="${courses.isEmpty()}">
+        <div th:each="c : ${courses}" class="col-md-6 col-lg-4">
+            <div class="card h-100 card-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-secondary-subtle text-secondary" th:text="${c.category}">Kategoriya</span>
+                        <span class="badge bg-primary-subtle text-primary fw-bold" th:text="${c.code}">CS101</span>
+                    </div>
+                    <h5 class="card-title fw-bold text-dark mb-2" th:text="${c.title}">Fan Nomi</h5>
+                    <p class="card-text text-muted small flex-grow-1" th:text="${#strings.abbreviate(c.description, 70)}">Tavsif</p>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="text-muted">O'zlashtirish:</span>
+                            <span class="fw-bold text-primary" th:text="${progressMap.get(c.id)} + '%'">50%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" th:style="'width: ' + ${progressMap.get(c.id)} + '%'"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center text-muted small mb-3">
+                        <span><i class="bi bi-person me-1"></i> <span th:text="${c.teacher != null ? c.teacher.fullName : 'Biriktirilmagan'}">O'qituvchi</span></span>
+                        <span><i class="bi bi-journal-text me-1"></i> <span th:text="${c.lessons.size()} + ' mavzu'">4 mavzu</span></span>
+                    </div>
+
+                    <a th:href="@{'/student/courses/' + ${c.id}}" class="btn btn-primary w-100">
+                        <i class="bi bi-play-circle me-1"></i> Fanga Kirish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two columns: Recent Submissions and Recent Quiz Results -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-check2-circle text-success me-2"></i> Topshirilgan Vazifalar</h5>
+                    <a th:href="@{/student/grades}" class="btn btn-sm btn-light border">Barchasi</a>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${recentSubmissions.isEmpty()}" class="p-4 text-center text-muted small">
+                        Hozircha topshirilgan vazifalar yo'q.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${recentSubmissions.isEmpty()}">
+                        <li th:each="s : ${recentSubmissions}" class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-dark" th:text="${s.assignment.title}">Topshiriq</div>
+                                <small class="text-muted" th:text="${s.assignment.course.title} + ' | ' + ${#temporals.format(s.submittedAt, 'dd.MM.yyyy')}"></small>
+                            </div>
+                            <div class="text-end">
+                                <span th:if="${s.score != null}" class="badge bg-success fs-6" th:text="${s.score} + ' ball'">95 ball</span>
+                                <span th:unless="${s.score != null}" class="badge bg-warning text-dark">Tekshirilmoqda</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-patch-check text-primary me-2"></i> Test Natijalari</h5>
+                    <a th:href="@{/student/grades}" class="btn btn-sm btn-light border">Barchasi</a>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${recentQuizResults.isEmpty()}" class="p-4 text-center text-muted small">
+                        Hozircha test natijalari mavjud emas.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${recentQuizResults.isEmpty()}">
+                        <li th:each="qr : ${recentQuizResults}" class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold text-dark" th:text="${qr.quiz.title}">Test nomi</div>
+                                <small class="text-muted" th:text="${qr.quiz.course.title} + ' | To\'g\'ri: ' + ${qr.correctAnswers} + '/' + ${qr.totalQuestions}"></small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary fs-6" th:text="${#numbers.formatDecimal(qr.percentage, 1, 1)} + '%'">100%</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

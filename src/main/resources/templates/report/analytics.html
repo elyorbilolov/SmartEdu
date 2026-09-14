@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Platforma Analitikasi va Hisobotlar')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i> Platforma Analitikasi va Hisobotlar</h2>
+            <p class="text-muted mb-0">«SmartEdu» tizimidagi o'quv ko'rsatkichlari va akademik hisobotlar markazi</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalStudents}">0</h3>
+                    <p class="text-muted small mb-0">Jami Talabalar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-person-video3"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalTeachers}">0</h3>
+                    <p class="text-muted small mb-0">O'qituvchilar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-book"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalCourses}">0</h3>
+                    <p class="text-muted small mb-0">Faol Fanlar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-check2-all"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0" th:text="${totalSubmissions}">0</h3>
+                    <p class="text-muted small mb-0">Topshirilgan Yechimlar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart and Course Gradebook Exports -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-graph-up me-2 text-primary"></i> Fanlar bo'yicha Talabalar Qamrovi</h5>
+                <canvas id="coursesChart" height="220"></canvas>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-excel text-success me-2"></i> Baholar Jurnali (Excel Eksport)</h5>
+                <p class="text-muted small mb-3">Har bir fan bo'yicha yakuniy hisobotni Excel (.xlsx) formatida bir klikda yuklab oling:</p>
+
+                <div class="d-flex flex-column gap-2">
+                    <div th:each="c : ${courses}" class="d-flex justify-content-between align-items-center p-3 rounded-3 border bg-light">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary fw-bold" th:text="${c.code}">CS101</span>
+                            <div class="fw-semibold text-dark small mt-1" th:text="${c.title}">Fan Nomi</div>
+                            <small class="text-muted" th:text="${c.students.size()} + ' nafar talaba'"></small>
+                        </div>
+                        <a th:href="@{'/reports/course/' + ${c.id} + '/excel'}" class="btn btn-success btn-sm px-3 shadow-sm">
+                            <i class="bi bi-download me-1"></i> Excel (.xlsx)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var courseLabels = [];
+    var studentCounts = [];
+
+    /*[# th:each="c : ${courses}"]*/
+    courseLabels.push([[${c.title}]]);
+    studentCounts.push([[${c.students.size()}]]);
+    /*[/]*/
+
+    var ctx = document.getElementById('coursesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: courseLabels,
+            datasets: [{
+                label: 'Talabalar Soni',
+                data: studentCounts,
+                backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                borderColor: 'rgba(37, 99, 235, 1)',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>

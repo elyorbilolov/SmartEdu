@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${course.title})}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Course Banner -->
+    <div class="card bg-white border-0 shadow-sm p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <div class="d-flex gap-2 align-items-center mb-2">
+                    <span class="badge bg-primary" th:text="${course.code}">CS101</span>
+                    <span class="badge bg-secondary-subtle text-secondary" th:text="${course.category}">Kategoriya</span>
+                    <span class="badge bg-info-subtle text-info" th:text="${course.creditHours} + ' kredit'">4 kredit</span>
+                </div>
+                <h2 class="fw-bold text-dark mb-1" th:text="${course.title}">Fan Nomi</h2>
+                <p class="text-muted mb-2" th:text="${course.description}">Tavsif</p>
+                <div class="small text-muted">
+                    <i class="bi bi-person-video3 me-1"></i> O'qituvchi: <strong class="text-dark" th:text="${course.teacher != null ? course.teacher.fullName : 'Biriktirilmagan'}">Ustoz</strong>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <form th:if="${!isEnrolled}" th:action="@{'/student/courses/' + ${course.id} + '/enroll'}" method="post">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Ushbu fanga a'zo bo'lish
+                    </button>
+                </form>
+                <div th:if="${isEnrolled}">
+                    <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 mb-2 d-inline-block">
+                        <i class="bi bi-check-circle-fill me-1"></i> Siz ushbu fanga a'zosiz
+                    </span>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <div class="progress flex-grow-1" style="height: 10px; width: 140px;">
+                            <div class="progress-bar bg-success" th:style="'width: ' + ${progress} + '%'"></div>
+                        </div>
+                        <span class="fw-bold small text-dark" th:text="${progress} + '%'">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded-3 border shadow-sm" id="studentCourseTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-semibold" data-bs-toggle="pill" data-bs-target="#tabLessons" type="button">
+                <i class="bi bi-journal-text me-1"></i> Darslar va Materiallar (<span th:text="${lessons.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" data-bs-toggle="pill" data-bs-target="#tabAssignments" type="button">
+                <i class="bi bi-file-earmark-check me-1"></i> Topshiriqlar (<span th:text="${assignments.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" data-bs-toggle="pill" data-bs-target="#tabQuizzes" type="button">
+                <i class="bi bi-patch-question me-1"></i> Onlayn Testlar (<span th:text="${quizzes.size()}">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" data-bs-toggle="pill" data-bs-target="#tabAnnouncements" type="button">
+                <i class="bi bi-megaphone me-1"></i> E'lonlar (<span th:text="${announcements.size()}">0</span>)
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="studentCourseTabContent">
+
+        <!-- TAB 1: Lessons -->
+        <div class="tab-pane fade show active" id="tabLessons" role="tabpanel">
+            <div th:if="${lessons.isEmpty()}" class="alert alert-light border text-center py-4">
+                Hozircha o'quv darslari yuklanmagan.
+            </div>
+
+            <div class="d-flex flex-column gap-3" th:unless="${lessons.isEmpty()}">
+                <div th:each="l : ${lessons}" class="card border card-hover">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-primary-subtle text-primary fs-5" style="width: 44px; height: 44px;">
+                                <i class="bi bi-journal-bookmark"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-light text-muted border small mb-1" th:text="${l.orderIndex} + '-mavzu'">1-mavzu</span>
+                                <h5 class="fw-bold text-dark mb-1" th:text="${l.title}">Mavzu nomi</h5>
+                                <div class="small text-muted">
+                                    <span class="me-3"><i class="bi bi-paperclip me-1"></i> <span th:text="${l.materials.size()} + ' material'">0 material</span></span>
+                                    <span th:if="${l.videoUrl != null}"><i class="bi bi-play-btn-fill text-danger me-1"></i> Video mavjud</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <a th:href="@{'/student/courses/' + ${course.id} + '/lessons/' + ${l.id}}" class="btn btn-primary">
+                                <i class="bi bi-book-half me-1"></i> O'rganish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Assignments -->
+        <div class="tab-pane fade" id="tabAssignments" role="tabpanel">
+            <div th:if="${assignments.isEmpty()}" class="alert alert-light border text-center py-4">
+                Hozircha ushbu fanda topshiriqlar yo'q.
+            </div>
+
+            <div class="row g-3" th:unless="${assignments.isEmpty()}">
+                <div th:each="a : ${assignments}" class="col-md-6">
+                    <div class="card h-100 border">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-warning-subtle text-warning fw-semibold">
+                                    Maks: <span th:text="${a.maxScore}">100</span> ball
+                                </span>
+                                <span class="badge bg-light text-muted border" th:if="${a.deadline != null}">
+                                    <i class="bi bi-clock me-1"></i> <span th:text="${#temporals.format(a.deadline, 'dd.MM.yyyy HH:mm')}">Muddati</span>
+                                </span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2" th:text="${a.title}">Topshiriq Nomi</h5>
+                            <p class="text-muted small flex-grow-1" th:text="${#strings.abbreviate(a.description, 80)}">Tavsif</p>
+
+                            <hr class="my-3 text-muted">
+
+                            <a th:href="@{'/student/assignments/' + ${a.id}}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-upload me-1"></i> Topshiriqqa O'tish & Yechim Yuklash
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Quizzes -->
+        <div class="tab-pane fade" id="tabQuizzes" role="tabpanel">
+            <div th:if="${quizzes.isEmpty()}" class="alert alert-light border text-center py-4">
+                Hozircha onlayn testlar mavjud emas.
+            </div>
+
+            <div class="row g-3" th:unless="${quizzes.isEmpty()}">
+                <div th:each="q : ${quizzes}" class="col-md-6">
+                    <div class="card h-100 border">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary-subtle text-primary">
+                                    <i class="bi bi-clock me-1"></i> <span th:text="${q.timeLimitMinutes} + ' daqiqa'">15 daqiqa</span>
+                                </span>
+                                <span class="badge bg-secondary-subtle text-secondary">
+                                    <span th:text="${q.questions.size()}">0</span> ta savol
+                                </span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2" th:text="${q.title}">Test Nomi</h5>
+                            <p class="text-muted small flex-grow-1" th:text="${q.description}">Tavsif</p>
+
+                            <hr class="my-3 text-muted">
+
+                            <a th:href="@{'/student/quizzes/' + ${q.id} + '/take'}" class="btn btn-primary w-100">
+                                <i class="bi bi-pencil-square me-1"></i> Testni Boshlash
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Announcements -->
+        <div class="tab-pane fade" id="tabAnnouncements" role="tabpanel">
+            <div th:if="${announcements.isEmpty()}" class="alert alert-light border text-center py-4">
+                Ushbu fanda hozircha e'lonlar mavjud emas.
+            </div>
+
+            <div class="d-flex flex-column gap-3" th:unless="${announcements.isEmpty()}">
+                <div th:each="an : ${announcements}" class="card border">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-megaphone-fill text-warning me-2"></i> <span th:text="${an.title}">Sarlavha</span></h5>
+                            <span class="small text-muted" th:text="${#temporals.format(an.createdAt, 'dd.MM.yyyy HH:mm')}">Sana</span>
+                        </div>
+                        <p class="text-muted small mb-0" style="white-space: pre-line;" th:text="${an.content}">Matn</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

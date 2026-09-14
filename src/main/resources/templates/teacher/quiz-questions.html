@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Test Savollari')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <a th:href="@{'/teacher/courses/' + ${quiz.course.id}}" class="btn btn-sm btn-light border mb-2">
+                <i class="bi bi-arrow-left me-1"></i> Fanga qaytish
+            </a>
+            <h3 class="fw-bold mb-1" th:text="${quiz.title}">Test Savollari</h3>
+            <p class="text-muted small mb-0">Fan: <strong th:text="${quiz.course.title}">Fan</strong> | Vaqt: <strong th:text="${quiz.timeLimitMinutes} + ' daqiqa'">15 daqiqa</strong></p>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                <i class="bi bi-plus-lg me-1"></i> Yangi Savol Qo'shish
+            </button>
+        </div>
+    </div>
+
+    <!-- Questions List -->
+    <div class="row g-3">
+        <div th:if="${questions.isEmpty()}" class="col-12">
+            <div class="alert alert-light border text-center py-4">
+                Ushbu testda hozircha savollar yo'q. "Yangi Savol Qo'shish" tugmasini bosing.
+            </div>
+        </div>
+
+        <div th:each="q, iter : ${questions}" class="col-12">
+            <div class="card border shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-primary" th:text="${iter.count} + '-savol'">1-savol</span>
+                    <form th:action="@{'/teacher/quizzes/questions/' + ${q.id} + '/delete'}" method="post" class="d-inline" onsubmit="return confirm('Savolni o\'chirmoqchimisiz?');">
+                        <input type="hidden" name="quizId" th:value="${quiz.id}">
+                        <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash me-1"></i> O'chirish</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold text-dark mb-3" th:text="${q.questionText}">Savol matni</h6>
+
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="p-2 rounded border" th:classappend="${q.correctOption == 'A' ? 'bg-success-subtle border-success' : 'bg-light'}">
+                                <strong>A)</strong> <span th:text="${q.optionA}">Option A</span>
+                                <span th:if="${q.correctOption == 'A'}" class="badge bg-success float-end">To'g'ri</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-2 rounded border" th:classappend="${q.correctOption == 'B' ? 'bg-success-subtle border-success' : 'bg-light'}">
+                                <strong>B)</strong> <span th:text="${q.optionB}">Option B</span>
+                                <span th:if="${q.correctOption == 'B'}" class="badge bg-success float-end">To'g'ri</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-2 rounded border" th:classappend="${q.correctOption == 'C' ? 'bg-success-subtle border-success' : 'bg-light'}">
+                                <strong>C)</strong> <span th:text="${q.optionC}">Option C</span>
+                                <span th:if="${q.correctOption == 'C'}" class="badge bg-success float-end">To'g'ri</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-2 rounded border" th:classappend="${q.correctOption == 'D' ? 'bg-success-subtle border-success' : 'bg-light'}">
+                                <strong>D)</strong> <span th:text="${q.optionD}">Option D</span>
+                                <span th:if="${q.correctOption == 'D'}" class="badge bg-success float-end">To'g'ri</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal to Add Question -->
+    <div class="modal fade" id="addQuestionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form th:action="@{'/teacher/quizzes/' + ${quiz.id} + '/questions/new'}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Yangi Savol Qo'shish</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Savol Matni *</label>
+                            <textarea class="form-control" name="questionText" rows="3" placeholder="Savol matnini kiriting..." required></textarea>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">A Variant *</label>
+                                <input type="text" class="form-control" name="optionA" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">B Variant *</label>
+                                <input type="text" class="form-control" name="optionB" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">C Variant *</label>
+                                <input type="text" class="form-control" name="optionC" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">D Variant *</label>
+                                <input type="text" class="form-control" name="optionD" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">To'g'ri Javob Qaysi? *</label>
+                            <select class="form-select" name="correctOption" required>
+                                <option value="A">A varianti</option>
+                                <option value="B">B varianti</option>
+                                <option value="C">C varianti</option>
+                                <option value="D">D varianti</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Bekor qilish</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Savolni Qo'shish</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

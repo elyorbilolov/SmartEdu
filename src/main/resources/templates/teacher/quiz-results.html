@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Test Natijalari')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="card bg-white border-0 shadow-sm p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <a th:href="@{'/teacher/courses/' + ${quiz.course.id}}" class="btn btn-sm btn-light border mb-2">
+                    <i class="bi bi-arrow-left me-1"></i> Fanga qaytish
+                </a>
+                <h3 class="fw-bold mb-1" th:text="${quiz.title} + ' - Natijalar'">Test Natijalari</h3>
+                <p class="text-muted small mb-0">Fan: <strong th:text="${quiz.course.title}">Fan</strong> | Jami savollar: <strong th:text="${quiz.questions.size()}">0</strong> ta</p>
+            </div>
+            <div>
+                <span class="badge bg-primary fs-6 px-3 py-2">
+                    Test topshirganlar: <span th:text="${results.size()}">0</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Talaba F.I.Sh</th>
+                        <th>Login</th>
+                        <th>Savollar Soni</th>
+                        <th>To'g'ri Javoblar</th>
+                        <th>Foiz (%)</th>
+                        <th>Topshirilgan Vaqt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${results.isEmpty()}">
+                        <td colspan="7" class="text-center py-4 text-muted">Hozircha birorta talaba ushbu testni topshirmagan.</td>
+                    </tr>
+                    <tr th:each="r, iter : ${results}">
+                        <td th:text="${iter.count}">1</td>
+                        <td class="fw-bold" th:text="${r.student.fullName}">Talaba Ismi</td>
+                        <td><span class="badge bg-light text-dark border" th:text="${r.student.username}">login</span></td>
+                        <td th:text="${r.totalQuestions}">5</td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success fs-6" th:text="${r.correctAnswers}">5</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar" th:classappend="${r.percentage >= 85 ? 'bg-success' : (r.percentage >= 60 ? 'bg-primary' : 'bg-danger')}" th:style="'width: ' + ${r.percentage} + '%'"></div>
+                                </div>
+                                <span class="fw-bold small" th:text="${#numbers.formatDecimal(r.percentage, 1, 1)} + '%'">100%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted" th:text="${#temporals.format(r.takenAt, 'dd.MM.yyyy HH:mm')}">Sana</small>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

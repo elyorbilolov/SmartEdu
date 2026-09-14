@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mening Baholarim')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Header with PDF Transcript Download -->
+    <div class="card bg-white border-0 shadow-sm p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-1"><i class="bi bi-award-fill text-warning me-2"></i> Baholar Jurnali & Reyting Daftarchasi</h3>
+                <p class="text-muted mb-0">Talaba: <strong class="text-dark" th:text="${student.fullName}">Talaba</strong> (<span th:text="${student.username}">login</span>)</p>
+            </div>
+            <div>
+                <a th:href="@{/reports/student/transcript}" class="btn btn-danger btn-lg shadow-sm">
+                    <i class="bi bi-file-earmark-pdf me-2"></i> Rasmiy Hisobotni Yuklab Olish (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Assignments Grades -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i> Topshiriqlar va Laboratoriyalar Baholari</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Fan Nomi</th>
+                        <th>Topshiriq Nomi</th>
+                        <th>Topshirilgan Vaqt</th>
+                        <th>Holati</th>
+                        <th>To'plangan Ball</th>
+                        <th>Ustoz Izohi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${submissions.isEmpty()}">
+                        <td colspan="7" class="text-center py-4 text-muted">Hozircha topshirilgan vazifalar yo'q.</td>
+                    </tr>
+                    <tr th:each="s, iter : ${submissions}">
+                        <td th:text="${iter.count}">1</td>
+                        <td class="fw-semibold" th:text="${s.assignment.course.title}">Fan</td>
+                        <td th:text="${s.assignment.title}">Topshiriq</td>
+                        <td><small class="text-muted" th:text="${#temporals.format(s.submittedAt, 'dd.MM.yyyy HH:mm')}">Vaqt</small></td>
+                        <td>
+                            <span class="badge" th:classappend="${s.status.name() == 'GRADED' ? 'bg-success' : 'bg-warning text-dark'}" th:text="${s.status.displayName}">Holat</span>
+                        </td>
+                        <td>
+                            <span th:if="${s.score != null}" class="fw-bold text-success fs-6" th:text="${s.score} + ' / ' + ${s.assignment.maxScore}">95 / 100</span>
+                            <span th:unless="${s.score != null}" class="text-muted fst-italic">Kutilmoqda</span>
+                        </td>
+                        <td>
+                            <span class="small text-muted" th:text="${s.teacherFeedback != null ? s.teacherFeedback : '-'}">Izoh</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Quizzes Results -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-patch-question text-success me-2"></i> Onlayn Testlar Natijalari</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Fan Nomi</th>
+                        <th>Test Nomi</th>
+                        <th>Jami Savollar</th>
+                        <th>To'g'ri Javoblar</th>
+                        <th>Natija (%)</th>
+                        <th>Sana</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${quizResults.isEmpty()}">
+                        <td colspan="7" class="text-center py-4 text-muted">Hozircha test natijalari mavjud emas.</td>
+                    </tr>
+                    <tr th:each="qr, iter : ${quizResults}">
+                        <td th:text="${iter.count}">1</td>
+                        <td class="fw-semibold" th:text="${qr.quiz.course.title}">Fan</td>
+                        <td th:text="${qr.quiz.title}">Test</td>
+                        <td th:text="${qr.totalQuestions}">5</td>
+                        <td><span class="badge bg-success-subtle text-success fs-6" th:text="${qr.correctAnswers}">5</span></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 8px; width: 80px;">
+                                    <div class="progress-bar bg-primary" th:style="'width: ' + ${qr.percentage} + '%'"></div>
+                                </div>
+                                <span class="fw-bold small" th:text="${#numbers.formatDecimal(qr.percentage, 1, 1)} + '%'">100%</span>
+                            </div>
+                        </td>
+                        <td><small class="text-muted" th:text="${#temporals.format(qr.takenAt, 'dd.MM.yyyy HH:mm')}">Sana</small></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

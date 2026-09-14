@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${assignment.title})}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Assignment Details -->
+            <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+                <a th:href="@{'/student/courses/' + ${assignment.course.id}}" class="text-decoration-none text-muted small mb-2 d-inline-block">
+                    <i class="bi bi-arrow-left me-1"></i> <span th:text="${assignment.course.title}">Fan</span>ga qaytish
+                </a>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <h3 class="fw-bold text-dark mb-0" th:text="${assignment.title}">Topshiriq Nomi</h3>
+                    <span class="badge bg-warning-subtle text-warning fw-bold fs-6">
+                        Maksimal: <span th:text="${assignment.maxScore}">100</span> ball
+                    </span>
+                </div>
+
+                <div class="small text-muted mb-3">
+                    <i class="bi bi-clock me-1"></i> Topshirish muddati:
+                    <strong class="text-dark" th:text="${assignment.deadline != null ? #temporals.format(assignment.deadline, 'dd.MM.yyyy HH:mm') : 'Cheklovsiz'}">Muddati</strong>
+                </div>
+
+                <hr class="text-muted">
+
+                <div class="lead fs-6 text-dark mb-4" style="white-space: pre-line; line-height: 1.7;" th:text="${assignment.description}">
+                    Topshiriq sharti va ko'rsatmalari
+                </div>
+
+                <!-- Attachment file if teacher provided one -->
+                <div th:if="${assignment.attachmentPath != null}" class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-paperclip fs-4 text-primary"></i>
+                        <div>
+                            <div class="fw-semibold small">Topshiriq uchun biriktirilgan fayl:</div>
+                            <span class="small text-muted" th:text="${assignment.attachmentFileName}">fayl.pdf</span>
+                        </div>
+                    </div>
+                    <a th:href="@{'/assignments/download/' + ${assignment.id}}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-download me-1"></i> Yuklab olish
+                    </a>
+                </div>
+            </div>
+
+            <!-- Existing Submission / Grade Status -->
+            <div th:if="${submission != null}" class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-check2-all text-success me-2"></i> Sizning Topshirgan Yechimingiz</h5>
+
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge" th:classappend="${submission.status.name() == 'GRADED' ? 'bg-success' : (submission.status.name() == 'LATE' ? 'bg-danger' : 'bg-warning text-dark')}" th:text="${submission.status.displayName}">Holati</span>
+                        <small class="text-muted" th:text="${#temporals.format(submission.submittedAt, 'dd.MM.yyyy HH:mm')}">Vaqt</small>
+                    </div>
+
+                    <div th:if="${submission.submittedText != null and !submission.submittedText.isBlank()}" class="small text-dark mb-2" style="white-space: pre-line;" th:text="${submission.submittedText}">
+                        Yechim matni
+                    </div>
+
+                    <div th:if="${submission.fileName != null}">
+                        <a th:href="@{'/submissions/download/' + ${submission.id}}" class="btn btn-sm btn-outline-primary py-1">
+                            <i class="bi bi-file-earmark-check me-1"></i> Topshirilgan fayl: <span th:text="${submission.fileName}"></span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Teacher Feedback Box -->
+                <div th:if="${submission.score != null}" class="p-3 bg-success-subtle border border-success rounded-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h6 class="fw-bold text-success mb-0"><i class="bi bi-award-fill me-1"></i> O'qituvchi Bahosi:</h6>
+                        <span class="fs-5 fw-bold text-success" th:text="${submission.score} + ' / ' + ${assignment.maxScore} + ' ball'">95 / 100</span>
+                    </div>
+                    <div th:if="${submission.teacherFeedback != null and !submission.teacherFeedback.isBlank()}" class="small text-dark mt-2">
+                        <strong>Ustoz izohi:</strong> <span th:text="${submission.teacherFeedback}">Izoh</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submission Upload Form -->
+            <div class="card border-0 shadow-sm p-4 rounded-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-cloud-upload text-primary me-2"></i>
+                    <span th:text="${submission != null ? 'Yechimni Qayta Yuklash' : 'Yechimni Topshirish'}">Yechimni Topshirish</span>
+                </h5>
+
+                <form th:action="@{'/student/assignments/' + ${assignment.id} + '/submit'}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Yechim Matni / Izoh</label>
+                        <textarea class="form-control" name="submittedText" rows="4" placeholder="Topshiriq bo'yicha tushuntirish, GitHub havola yoki matnli yechim..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Yechim Fayli (PDF, ZIP, DOCX, Java, SQL va h.k.)</label>
+                        <input type="file" class="form-control" name="file">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">
+                        <i class="bi bi-send me-1"></i> Yechimni Yuborish
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

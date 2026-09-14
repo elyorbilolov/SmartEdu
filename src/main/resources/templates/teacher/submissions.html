@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Talabalar Yechimlari')}"></head>
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="card bg-white border-0 shadow-sm p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <a th:href="@{'/teacher/courses/' + ${assignment.course.id}}" class="btn btn-sm btn-light border mb-2">
+                    <i class="bi bi-arrow-left me-1"></i> Fanga qaytish
+                </a>
+                <h3 class="fw-bold mb-1" th:text="${assignment.title}">Topshiriq Nomi</h3>
+                <p class="text-muted small mb-0">
+                    Fan: <strong th:text="${assignment.course.title}">Fan</strong> |
+                    Maks ball: <strong th:text="${assignment.maxScore}">100</strong> |
+                    Muddati: <strong th:text="${assignment.deadline != null ? #temporals.format(assignment.deadline, 'dd.MM.yyyy HH:mm') : 'Belgilanmagan'}">Muddati</strong>
+                </p>
+            </div>
+            <div>
+                <span class="badge bg-primary fs-6 px-3 py-2">
+                    Jami topshirilgan: <span th:text="${submissions.size()}">0</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i> Topshirilgan Yechimlar</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Talaba</th>
+                        <th>Topshirilgan Vaqt</th>
+                        <th>Yechim Matni</th>
+                        <th>Biriktirilgan Fayl</th>
+                        <th>Holati</th>
+                        <th>Qo'yilgan Ball</th>
+                        <th class="text-end">Baholash</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${submissions.isEmpty()}">
+                        <td colspan="8" class="text-center py-4 text-muted">Hozircha birorta talaba yechim topshirmagan.</td>
+                    </tr>
+                    <tr th:each="s, iter : ${submissions}">
+                        <td th:text="${iter.count}">1</td>
+                        <td>
+                            <div class="fw-bold" th:text="${s.student.fullName}">Talaba Ismi</div>
+                            <small class="text-muted" th:text="${s.student.username}">login</small>
+                        </td>
+                        <td>
+                            <small th:text="${#temporals.format(s.submittedAt, 'dd.MM.yyyy HH:mm')}">Vaqt</small>
+                        </td>
+                        <td>
+                            <span th:if="${s.submittedText != null and !s.submittedText.isBlank()}" class="small text-muted" th:text="${#strings.abbreviate(s.submittedText, 40)}">Matn</span>
+                            <span th:unless="${s.submittedText != null and !s.submittedText.isBlank()}" class="text-muted fst-italic small">Yo'q</span>
+                        </td>
+                        <td>
+                            <a th:if="${s.fileName != null}" th:href="@{'/submissions/download/' + ${s.id}}" class="btn btn-sm btn-outline-primary py-1">
+                                <i class="bi bi-file-earmark-arrow-down me-1"></i> <span th:text="${#strings.abbreviate(s.fileName, 20)}">Fayl</span>
+                            </a>
+                            <span th:unless="${s.fileName != null}" class="text-muted small fst-italic">Fayl yo'q</span>
+                        </td>
+                        <td>
+                            <span class="badge" th:classappend="${s.status.name() == 'GRADED' ? 'bg-success' : (s.status.name() == 'LATE' ? 'bg-danger' : 'bg-warning text-dark')}" th:text="${s.status.displayName}">Holati</span>
+                        </td>
+                        <td>
+                            <span th:if="${s.score != null}" class="fw-bold text-success fs-6" th:text="${s.score} + ' / ' + ${assignment.maxScore}">95 / 100</span>
+                            <span th:unless="${s.score != null}" class="text-muted fst-italic">Baholanmagan</span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" th:data-bs-target="'#gradeModal' + ${s.id}">
+                                <i class="bi bi-check-circle me-1"></i> <span th:text="${s.score != null ? 'Qayta baholash' : 'Baholash'}">Baholash</span>
+                            </button>
+
+                            <!-- Grade Modal -->
+                            <div class="modal fade text-start" th:id="'gradeModal' + ${s.id}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form th:action="@{'/teacher/submissions/' + ${s.id} + '/grade'}" method="post">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-bold">Yechimni Baholash</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3 p-3 bg-light rounded border">
+                                                    <div class="small fw-semibold">Talaba: <span th:text="${s.student.fullName}"></span></div>
+                                                    <div class="small text-muted mt-1">Yechim izohi:</div>
+                                                    <div class="small text-dark" style="white-space: pre-line;" th:text="${s.submittedText != null ? s.submittedText : 'Matn kiritilmagan'}"></div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Ball (Maksimal: <span th:text="${assignment.maxScore}"></span>) *</label>
+                                                    <input type="number" class="form-control" name="score" th:value="${s.score != null ? s.score : assignment.maxScore}" min="0" th:max="${assignment.maxScore}" required>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">O'qituvchi Izohi (Feedback)</label>
+                                                    <textarea class="form-control" name="feedback" rows="3" placeholder="Yechim bo'yicha kamchiliklar yoki tavsiyalar..." th:text="${s.teacherFeedback}"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Bekor qilish</button>
+                                                <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle me-1"></i> Bahoni Saqlash</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

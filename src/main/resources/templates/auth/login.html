@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tizimga kirish')}"></head>
+<body class="bg-light">
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="display-6 text-primary mb-2">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <h3 class="fw-bold">Tizimga kirish</h3>
+                        <p class="text-muted small">«SmartEdu» ta'lim tizimiga xush kelibsiz</p>
+                    </div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-semibold">Login</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Loginni kiriting" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">Parol</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Parolni kiriting" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Kirish
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4 text-muted small">
+                        Hisobingiz yo'qmi? <a th:href="@{/register}" class="text-primary fw-semibold">Ro'yxatdan o'tish</a>
+                    </div>
+
+                    <!-- Demo Accounts Quick Fill Box -->
+                    <hr class="my-4 text-muted">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="fw-bold small text-dark mb-2 text-center">
+                            <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Tezkor test hisoblari (1-klikda to'ldirish):
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger text-start d-flex justify-content-between align-items-center" onclick="fillLogin('admin', 'admin123')">
+                                <span><i class="bi bi-shield-lock me-1"></i> <strong>Admin:</strong> admin / admin123</span>
+                                <span class="badge bg-danger">Tanlash</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning text-dark text-start d-flex justify-content-between align-items-center" onclick="fillLogin('teacher', 'teacher123')">
+                                <span><i class="bi bi-person-video3 me-1"></i> <strong>O'qituvchi:</strong> teacher / teacher123</span>
+                                <span class="badge bg-warning text-dark">Tanlash</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary text-start d-flex justify-content-between align-items-center" onclick="fillLogin('student', 'student123')">
+                                <span><i class="bi bi-person-badge me-1"></i> <strong>Talaba:</strong> student / student123</span>
+                                <span class="badge bg-primary">Tanlash</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+    function fillLogin(user, pass) {
+        document.getElementById('username').value = user;
+        document.getElementById('password').value = pass;
+    }
+</script>
+
+</body>
+</html>

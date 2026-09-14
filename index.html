@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartEdu - Zamonaviy Ta'lim Platformasi</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- SheetJS (Excel generator) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF & autoTable (PDF generator) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-light: #f8fafc;
+            --card-border: #e2e8f0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #2563eb !important;
+        }
+        .card {
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--card-border);
+        }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 16px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary);
+        }
+        .badge-score {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        footer {
+            margin-top: auto;
+            background: white;
+            border-top: 1px solid var(--card-border);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-white bg-white border-bottom py-3 sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#" onclick="showSection('home')">
+            <i class="bi bi-mortarboard-fill fs-2 text-primary"></i>
+            <span>SmartEdu</span>
+            <span class="badge bg-primary-subtle text-primary small ms-1">LMS Web</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#" onclick="showSection('home')"><i class="bi bi-house-door me-1"></i> Asosiy</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#" onclick="showSection('students')">
+                        <i class="bi bi-people-fill text-primary me-1"></i> 32 Nafar Talaba Jurnali
+                        <span class="badge bg-primary rounded-pill">32</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#" onclick="showSection('courses')"><i class="bi bi-book me-1"></i> Fanlar & Darslar</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#" onclick="showSection('quiz')"><i class="bi bi-patch-question me-1"></i> Onlayn Test</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="#" onclick="showSection('analytics')"><i class="bi bi-bar-chart-line me-1"></i> Analitika</a>
+                </li>
+            </ul>
+
+            <!-- Role Indicator & Action -->
+            <div class="d-flex align-items-center gap-3">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-gear me-1"></i> Rol: <strong id="currentRoleText">Administrator</strong>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="switchRole('admin')"><i class="bi bi-shield-lock text-danger me-2"></i> Administrator</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchRole('teacher')"><i class="bi bi-person-video3 text-warning me-2"></i> O'qituvchi (Jasur Karimov)</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchRole('student')"><i class="bi bi-person-badge text-primary me-2"></i> Talaba (Elyor Bilolov)</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-success btn-sm d-flex align-items-center gap-1 shadow-sm" onclick="exportToExcel()">
+                    <i class="bi bi-file-earmark-excel-fill"></i>
+                    <span>Excel Yuklash</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN APP CONTAINER -->
+<main class="container py-4 flex-grow-1">
+
+    <!-- 1. HOME SECTION -->
+    <section id="section-home">
+        <!-- Hero Section -->
+        <div class="card border-0 bg-white shadow-sm p-4 p-md-5 mb-4 rounded-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-3">
+                        <i class="bi bi-stars me-1"></i> Universitet Ta'lim Tizimi (LMS)
+                    </span>
+                    <h1 class="display-5 fw-bold text-dark mb-3">
+                        «SmartEdu» Ta'lim Platformasi
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Talabalar, o'qituvchilar va ma'muriyat uchun yagona ta'lim muhiti. Quyida <strong>32 nafar talabaning</strong> to'liq reyting jadvali, o'quv materiallari, laboratoriya topshiriqlari, onlayn testlar va rasmiy PDF/Excel hisobotlari shakllantirilgan.
+                    </p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-primary btn-lg px-4 shadow-sm" onclick="showSection('students')">
+                            <i class="bi bi-people-fill me-2"></i> 32 Nafar Talaba Jurnalini Ko'rish
+                        </button>
+                        <button class="btn btn-success btn-lg px-4 shadow-sm" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Baholar Jurnalini Yuklash (Excel)
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                    <div class="p-4 bg-primary-subtle rounded-4 text-primary">
+                        <i class="bi bi-mortarboard display-1"></i>
+                        <h4 class="fw-bold mt-2">SmartEdu</h4>
+                        <p class="small text-muted mb-0">Java & Spring Boot & Web LMS</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0">32</h3>
+                        <p class="text-muted small mb-0">Guruhdagi Talabalar</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-book-half"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0">3</h3>
+                        <p class="text-muted small mb-0">Fanlar Soni</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-file-earmark-check"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0">32</h3>
+                        <p class="text-muted small mb-0">Baholangan Vazifalar</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-award-fill"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0">91.4%</h3>
+                        <p class="text-muted small mb-0">O'rtacha O'zlashtirish</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Highlights Table Preview -->
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i> Guruh Talabalari va Baholar Jurnali</h5>
+                    <p class="text-muted small mb-0">Barcha 32 talaba fanga to'liq biriktirilgan va baholangan</p>
+                </div>
+                <button class="btn btn-outline-primary btn-sm" onclick="showSection('students')">
+                    To'liq jadvalni ochish <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="previewTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Talaba F.I.Sh</th>
+                            <th>Login</th>
+                            <th>Fan</th>
+                            <th>Laboratoriya Balli</th>
+                            <th>Test Natijasi</th>
+                            <th>Umumiy Ball</th>
+                            <th>Holati</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. STUDENTS TABLE SECTION (32 TALABA TO'LIQ JURNALI) -->
+    <section id="section-students" style="display: none;">
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1"><i class="bi bi-people-fill text-primary me-2"></i> Guruh Talabalari va Baholar Jurnali</h3>
+                    <p class="text-muted small mb-0">Fan: <strong>Java va Spring Boot Asoslari (CS101)</strong> | Guruh: <strong>CS-21</strong> | Jami: <strong>32 nafar talaba</strong></p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-success shadow-sm" onclick="exportToExcel()">
+                        <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel Jurnalni Yuklab Olish (.xlsx)
+                    </button>
+                    <button class="btn btn-danger shadow-sm" onclick="downloadAllTranscriptsZip()">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Barcha PDF Hisobotlar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="studentSearchInput" placeholder="Talaba F.I.Sh yoki login bo'yicha qidiruv..." onkeyup="filterStudents()">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter" onchange="filterStudents()">
+                        <option value="ALL">Barcha holatlar</option>
+                        <option value="A'lo">A'lo (90-100)</option>
+                        <option value="Yaxshi">Yaxshi (80-89)</option>
+                        <option value="O'tdi">Qoniqarli (70-79)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-end d-flex align-items-center justify-content-end">
+                    <span class="text-muted small">Ko'rsatilmoqda: <strong id="studentCountBadge">32</strong> / 32</span>
+                </div>
+            </div>
+
+            <!-- Main Students Table -->
+            <div class="table-responsive rounded-3 border">
+                <table class="table table-hover align-middle mb-0" id="mainStudentsTable">
+                    <thead class="table-primary text-white" style="background-color: #1e3a8a;">
+                        <tr>
+                            <th class="text-center" style="width: 50px;">№</th>
+                            <th>Talaba To'liq F.I.Sh</th>
+                            <th>Login / Pochta</th>
+                            <th class="text-center">1-Lab Balli</th>
+                            <th class="text-center">Test (Quiz)</th>
+                            <th class="text-center">Umumiy Ball</th>
+                            <th class="text-center">O'zlashtirish</th>
+                            <th class="text-end" style="width: 140px;">Hisobot (PDF)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. COURSES & LESSONS SECTION -->
+    <section id="section-courses" style="display: none;">
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+            <h3 class="fw-bold mb-3"><i class="bi bi-book-fill text-primary me-2"></i> Fanlar va O'quv Dasturlari</h3>
+
+            <div class="row g-4 mb-4">
+                <!-- Course 1 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border card-hover">
+                        <div class="card-body p-4">
+                            <span class="badge bg-primary fw-bold mb-2">CS101</span>
+                            <h5 class="fw-bold">Java va Spring Boot Asoslari</h5>
+                            <p class="text-muted small">Java Core, OOP, Spring Boot freymvorki, Spring Security va REST API texnologiyalari.</p>
+                            <hr>
+                            <div class="small text-muted mb-2"><i class="bi bi-person me-1"></i> O'qituvchi: <strong>Jasur Karimov</strong></div>
+                            <div class="small text-muted mb-3"><i class="bi bi-people me-1"></i> Talabalar: <strong>32 nafar</strong></div>
+                            <button class="btn btn-primary w-100 btn-sm" onclick="openLessonModal('Java OOP & Spring Boot')">
+                                <i class="bi bi-play-circle me-1"></i> Darslarni Ko'rish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course 2 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border card-hover">
+                        <div class="card-body p-4">
+                            <span class="badge bg-success fw-bold mb-2">CS102</span>
+                            <h5 class="fw-bold">Ma'lumotlar Bazasi va SQL</h5>
+                            <p class="text-muted small">Relyatsion ma'lumotlar bazasi boshqaruvi, SQL DDL/DML, tranzaksiyalar va normallashtirish.</p>
+                            <hr>
+                            <div class="small text-muted mb-2"><i class="bi bi-person me-1"></i> O'qituvchi: <strong>Nilufar Rahimova</strong></div>
+                            <div class="small text-muted mb-3"><i class="bi bi-people me-1"></i> Talabalar: <strong>32 nafar</strong></div>
+                            <button class="btn btn-outline-success w-100 btn-sm" onclick="openLessonModal('Ma\'lumotlar Bazasi')">
+                                <i class="bi bi-play-circle me-1"></i> Darslarni Ko'rish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course 3 -->
+                <div class="col-md-4">
+                    <div class="card h-100 border card-hover">
+                        <div class="card-body p-4">
+                            <span class="badge bg-info text-white fw-bold mb-2">CS103</span>
+                            <h5 class="fw-bold">Web Dasturlash Asoslari</h5>
+                            <p class="text-muted small">Zamonaviy veb-texnologiyalar: HTML5, CSS3 fleksboks, Bootstrap 5 va JavaScript (ES6+).</p>
+                            <hr>
+                            <div class="small text-muted mb-2"><i class="bi bi-person me-1"></i> O'qituvchi: <strong>Jasur Karimov</strong></div>
+                            <div class="small text-muted mb-3"><i class="bi bi-people me-1"></i> Talabalar: <strong>32 nafar</strong></div>
+                            <button class="btn btn-outline-info w-100 btn-sm" onclick="openLessonModal('Web Dasturlash')">
+                                <i class="bi bi-play-circle me-1"></i> Darslarni Ko'rish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Lesson Player Box -->
+            <div class="card bg-light border p-4 rounded-3">
+                <h5 class="fw-bold mb-3"><i class="bi bi-youtube text-danger me-2"></i> 1-Mavzu Video Ma'ruza: Java OOP Tamoyillari</h5>
+                <div class="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm mb-3">
+                    <iframe src="https://www.youtube.com/embed/eIrMbAQSU34" title="Java Darsligi" allowfullscreen></iframe>
+                </div>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <strong>Biriktirilgan material:</strong>
+                        <span class="badge bg-danger-subtle text-danger ms-1"><i class="bi bi-file-earmark-pdf"></i> Java_OOP_Maruza.pdf (2.4 MB)</span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="alert('Material muvaffaqiyatli yuklab olindi!')">
+                        <i class="bi bi-download me-1"></i> Materialni Yuklab Olish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. QUIZ SECTION -->
+    <section id="section-quiz" style="display: none;">
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1"><i class="bi bi-patch-question-fill text-primary me-2"></i> Java & Spring Boot Onlayn Testi</h3>
+                    <p class="text-muted small mb-0">5 ta savol | Ajratilgan vaqt: 10 daqiqa | Har bir to'g'ri javob: 20 ball</p>
+                </div>
+                <span class="badge bg-primary fs-6 px-3 py-2">
+                    <i class="bi bi-stopwatch me-1"></i> <span id="quizTimer">10:00</span>
+                </span>
+            </div>
+
+            <form id="quizForm" onsubmit="submitQuiz(event)">
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <!-- Q1 -->
+                    <div class="card border p-3">
+                        <h6 class="fw-bold mb-2">1. Java dasturlash tilida barcha klasslarning asosiy ota klassi qaysi?</h6>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q1" value="A" id="q1a">
+                            <label class="form-check-label" for="q1a">A) Class</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q1" value="B" id="q1b" required>
+                            <label class="form-check-label" for="q1b">B) Object</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q1" value="C" id="q1c">
+                            <label class="form-check-label" for="q1c">C) Main</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q1" value="D" id="q1d">
+                            <label class="form-check-label" for="q1d">D) Base</label>
+                        </div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="card border p-3">
+                        <h6 class="fw-bold mb-2">2. Spring Boot'da RESTful kontroller yaratish uchun qaysi annotatsiya ishlatiladi?</h6>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q2" value="A" id="q2a">
+                            <label class="form-check-label" for="q2a">A) @Controller</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q2" value="B" id="q2b">
+                            <label class="form-check-label" for="q2b">B) @Service</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q2" value="C" id="q2c" required>
+                            <label class="form-check-label" for="q2c">C) @RestController</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q2" value="D" id="q2d">
+                            <label class="form-check-label" for="q2d">D) @Component</label>
+                        </div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="card border p-3">
+                        <h6 class="fw-bold mb-2">3. Qaysi tamoyil ma'lumotlarni tashqi nojo'ya ta'sirlardan yashirishni anglatadi?</h6>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q3" value="A" id="q3a">
+                            <label class="form-check-label" for="q3a">A) Polimorfizm</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q3" value="B" id="q3b">
+                            <label class="form-check-label" for="q3b">B) Vorislik</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q3" value="C" id="q3c">
+                            <label class="form-check-label" for="q3c">C) Abstraksiya</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q3" value="D" id="q3d" required>
+                            <label class="form-check-label" for="q3d">D) Inkapsulyatsiya</label>
+                        </div>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="card border p-3">
+                        <h6 class="fw-bold mb-2">4. Spring Data JPA'da CRUD operatsiyalari uchun qaysi asosiy interfeys kengaytiriladi?</h6>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q4" value="A" id="q4a" required>
+                            <label class="form-check-label" for="q4a">A) JpaRepository</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q4" value="B" id="q4b">
+                            <label class="form-check-label" for="q4b">B) SqlRepository</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q4" value="C" id="q4c">
+                            <label class="form-check-label" for="q4c">C) DatabaseRepository</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q4" value="D" id="q4d">
+                            <label class="form-check-label" for="q4d">D) CrudHandler</label>
+                        </div>
+                    </div>
+
+                    <!-- Q5 -->
+                    <div class="card border p-3">
+                        <h6 class="fw-bold mb-2">5. Java Virtual Machine (JVM) qanday formatdagi fayllarni bajaradi?</h6>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q5" value="A" id="q5a">
+                            <label class="form-check-label" for="q5a">A) .java</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q5" value="B" id="q5b" required>
+                            <label class="form-check-label" for="q5b">B) .class (baytkod)</label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="q5" value="C" id="q5c">
+                            <label class="form-check-label" for="q5c">C) .exe</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q5" value="D" id="q5d">
+                            <label class="form-check-label" for="q5d">D) Faqat .jar</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success btn-lg px-5 py-2 shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i> Testni Yakunlash
+                    </button>
+                </div>
+            </form>
+
+            <div id="quizResultAlert" class="alert alert-success mt-4 d-none">
+                <!-- Result displayed by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. ANALYTICS SECTION -->
+    <section id="section-analytics" style="display: none;">
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+            <h3 class="fw-bold mb-3"><i class="bi bi-graph-up text-primary me-2"></i> Platforma Analitikasi va Ko'rsatkichlar</h3>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <h6 class="fw-bold mb-3">Guruh bo'yicha baholar taqsimoti (32 nafar talaba)</h6>
+                        <canvas id="analyticsChart" height="180"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="p-3 bg-light rounded-3 border h-100">
+                        <h6 class="fw-bold mb-3">O'zlashtirish Foizlari</h6>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>A'lo (90-100 ball):</span>
+                                    <strong class="text-success">21 nafar (65.6%)</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: 65.6%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Yaxshi (80-89 ball):</span>
+                                    <strong class="text-primary">11 nafar (34.4%)</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" style="width: 34.4%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Qoniqarli (70-79 ball):</span>
+                                    <strong class="text-warning">0 nafar (0%)</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="py-4 mt-5">
+    <div class="container text-center text-muted">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-md-start mb-2 mb-md-0">
+                <span class="fw-bold text-primary">«SmartEdu»</span> Ta'lim Platformasi © 2026. Barcha huquqlar himoyalangan.
+            </div>
+            <div class="col-md-6 text-md-end small">
+                <span>32 Nafar Talaba Jurnali | Universitet topshirig'i | Netlify Ready</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- APPLICATION JAVASCRIPT & 32 STUDENTS DATA -->
+<script>
+    // 32 Official University Students list from user prompt
+    const students = [
+        { id: 1, name: "BILOLOV ELYOR BAHTIYOR O‘G‘LI", login: "bilolov_e", email: "elyor@smartedu.uz", lab: 95, quiz: 100, finalScore: 97.5, status: "A'lo" },
+        { id: 2, name: "FAXRIDDINOV G‘IYOSIDDIN FAXRIDDIN O‘G‘LI", login: "faxriddinov_g", email: "giyosiddin@smartedu.uz", lab: 88, quiz: 80, finalScore: 84.0, status: "Yaxshi" },
+        { id: 3, name: "FAZLIDDINOV UMIDJON SHAVKAT O‘G‘LI", login: "fazliddinov_u", email: "umidjon.f@smartedu.uz", lab: 92, quiz: 100, finalScore: 96.0, status: "A'lo" },
+        { id: 4, name: "ISMONALIYEV SHUKURILLO ILHOMJON O‘G‘LI", login: "ismonaliyev_sh", email: "shukurillo@smartedu.uz", lab: 85, quiz: 80, finalScore: 82.5, status: "Yaxshi" },
+        { id: 5, name: "JALLIYEV FERUZ XUSENOVICH", login: "jalliyev_f", email: "feruz@smartedu.uz", lab: 90, quiz: 100, finalScore: 95.0, status: "A'lo" },
+        { id: 6, name: "JUMAYEV MUZAFFAR FAXRITDIN O‘G‘LI", login: "jumayev_m", email: "muzaffar@smartedu.uz", lab: 94, quiz: 100, finalScore: 97.0, status: "A'lo" },
+        { id: 7, name: "KARIMOV AKROM IKRAM O‘G‘LI", login: "karimov_a", email: "akrom@smartedu.uz", lab: 87, quiz: 80, finalScore: 83.5, status: "Yaxshi" },
+        { id: 8, name: "KOSPAYEV BERDIYAR KONISOVICH", login: "kospayev_b", email: "berdiyar@smartedu.uz", lab: 89, quiz: 80, finalScore: 84.5, status: "Yaxshi" },
+        { id: 9, name: "MATKARIMOVA NOILA ASHIRBOYEVNA", login: "matkarimova_n", email: "noila@smartedu.uz", lab: 96, quiz: 100, finalScore: 98.0, status: "A'lo" },
+        { id: 10, name: "MELIQO‘ZIYEV MUSLIMJON MAXSUDJON O‘G‘LI", login: "meliqoziyev_m", email: "muslimjon@smartedu.uz", lab: 91, quiz: 100, finalScore: 95.5, status: "A'lo" },
+        { id: 11, name: "NIGMATOV TOXIR ISMATULLA O‘G‘LI", login: "nigmatov_t", email: "toxir@smartedu.uz", lab: 84, quiz: 80, finalScore: 82.0, status: "Yaxshi" },
+        { id: 12, name: "NURITDINOV ABDUMALIK SHAVKAT O‘G‘LI", login: "nuritdinov_a", email: "abdumalik@smartedu.uz", lab: 93, quiz: 100, finalScore: 96.5, status: "A'lo" },
+        { id: 13, name: "PARPIYEV SARDOR ADILJANOVICH", login: "parpiyev_s", email: "sardor.p@smartedu.uz", lab: 86, quiz: 80, finalScore: 83.0, status: "Yaxshi" },
+        { id: 14, name: "QALANDAROV KAMRONBEK QAXRAMON O‘G‘LI", login: "qalandarov_k", email: "kamronbek@smartedu.uz", lab: 90, quiz: 100, finalScore: 95.0, status: "A'lo" },
+        { id: 15, name: "REYMBAYEV SHAXZOD PARAXAT ULI", login: "reymbayev_sh", email: "shaxzod@smartedu.uz", lab: 88, quiz: 80, finalScore: 84.0, status: "Yaxshi" },
+        { id: 16, name: "ROXATOV FAZLIDDIN TIMUR O‘G‘LI", login: "roxatov_f", email: "fazliddin@smartedu.uz", lab: 92, quiz: 100, finalScore: 96.0, status: "A'lo" },
+        { id: 17, name: "RO‘ZIBOYEV ULMASBEK ULASH O‘G‘LI", login: "roziboyev_u", email: "ulmasbek@smartedu.uz", lab: 85, quiz: 80, finalScore: 82.5, status: "Yaxshi" },
+        { id: 18, name: "RUSTAMOV SAYFULLA XUDAYBERDI O‘G‘LI", login: "rustamov_s", email: "sayfulla@smartedu.uz", lab: 94, quiz: 100, finalScore: 97.0, status: "A'lo" },
+        { id: 19, name: "SHODIYEV UMIDJON ANVAR O‘G‘LI", login: "shodiyev_u", email: "umidjon.sh@smartedu.uz", lab: 89, quiz: 80, finalScore: 84.5, status: "Yaxshi" },
+        { id: 20, name: "SUBONOVA DURDONAXON MA`MUR QIZI", login: "subonova_d", email: "durdona@smartedu.uz", lab: 95, quiz: 100, finalScore: 97.5, status: "A'lo" },
+        { id: 21, name: "TANGIROV SUNNAT RAJAB O‘G‘LI", login: "tangirov_s", email: "sunnat@smartedu.uz", lab: 86, quiz: 80, finalScore: 83.0, status: "Yaxshi" },
+        { id: 22, name: "TURDIBOYEV ABDUAZIM ABDULAZIZ O‘G‘LI", login: "turdiboyev_a", email: "abduazim@smartedu.uz", lab: 91, quiz: 100, finalScore: 95.5, status: "A'lo" },
+        { id: 23, name: "UBAYDULLAXO‘JAYEV ATXAMXO‘JA ZIYODULLAXO‘JA O‘G‘LI", login: "ubaydullaxojayev_a", email: "atxamxoja@smartedu.uz", lab: 87, quiz: 80, finalScore: 83.5, status: "Yaxshi" },
+        { id: 24, name: "UBAYDULLAYEV MURODILLA QUTFULLAYEVICH", login: "ubaydullayev_m", email: "murodilla@smartedu.uz", lab: 93, quiz: 100, finalScore: 96.5, status: "A'lo" },
+        { id: 25, name: "UMAROV ULUG‘BEK HAMZA O‘G‘LI", login: "umarov_u", email: "ulugbek@smartedu.uz", lab: 90, quiz: 100, finalScore: 95.0, status: "A'lo" },
+        { id: 26, name: "UMAROVA SEVINCH LUTFILLA QIZI", login: "umarova_s", email: "sevinch@smartedu.uz", lab: 96, quiz: 100, finalScore: 98.0, status: "A'lo" },
+        { id: 27, name: "VAFAYEV JALOLBEK ERKINBOY O‘G‘LI", login: "vafayev_j", email: "jalolbek@smartedu.uz", lab: 88, quiz: 80, finalScore: 84.0, status: "Yaxshi" },
+        { id: 28, name: "XAKIMULLIN RUMIL KAMILEVICH", login: "xakimullin_r", email: "rumil@smartedu.uz", lab: 85, quiz: 80, finalScore: 82.5, status: "Yaxshi" },
+        { id: 29, name: "XAMZAYEV OYBEK ANVAR O‘G‘LI", login: "xamzayev_o", email: "oybek@smartedu.uz", lab: 92, quiz: 100, finalScore: 96.0, status: "A'lo" },
+        { id: 30, name: "XUDOYBERDIYEV RAXMATULLO OBIDXUJA O‘G‘LI", login: "xudoyberdiyev_r", email: "raxmatullo@smartedu.uz", lab: 89, quiz: 80, finalScore: 84.5, status: "Yaxshi" },
+        { id: 31, name: "YULDASHEVA UMIDA ISRAIL QIZI", login: "yuldasheva_u", email: "umida@smartedu.uz", lab: 94, quiz: 100, finalScore: 97.0, status: "A'lo" },
+        { id: 32, name: "ZIYAYEV SANJAR ABDUGANIYEVICH", login: "ziyayev_s", email: "sanjar@smartedu.uz", lab: 91, quiz: 100, finalScore: 95.5, status: "A'lo" }
+    ];
+
+    // Navigation Switcher
+    function showSection(section) {
+        document.querySelectorAll('main > section').forEach(el => el.style.display = 'none');
+        const target = document.getElementById('section-' + section);
+        if (target) {
+            target.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (section === 'analytics') {
+            initAnalyticsChart();
+        }
+    }
+
+    // Role Switcher
+    function switchRole(role) {
+        const roleText = document.getElementById('currentRoleText');
+        if (role === 'admin') roleText.innerText = "Administrator";
+        else if (role === 'teacher') roleText.innerText = "O'qituvchi";
+        else roleText.innerText = "Talaba (Elyor Bilolov)";
+        alert("Rol o'zgartirildi: " + roleText.innerText);
+    }
+
+    // Render Tables
+    function renderTables(list) {
+        const tbody = document.getElementById('studentsTableBody');
+        const previewBody = document.getElementById('previewTableBody');
+        tbody.innerHTML = '';
+        if (previewBody) previewBody.innerHTML = '';
+
+        list.forEach((s, idx) => {
+            const badgeClass = s.status === "A'lo" ? 'bg-success' : 'bg-primary';
+
+            // Main Table Row
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="text-center fw-bold">${s.id}</td>
+                <td>
+                    <div class="fw-bold text-dark">${s.name}</div>
+                    <small class="text-muted">Guruh: CS-21 | Semestr: 3</small>
+                </td>
+                <td>
+                    <span class="badge bg-light text-dark border">${s.login}</span>
+                    <div class="small text-muted">${s.email}</div>
+                </td>
+                <td class="text-center fw-semibold">${s.lab} / 100</td>
+                <td class="text-center fw-semibold">${s.quiz}%</td>
+                <td class="text-center"><span class="badge bg-success-subtle text-success fs-6">${s.finalScore}</span></td>
+                <td class="text-center"><span class="badge ${badgeClass}">${s.status}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" onclick="downloadPdfTranscript('${s.name}', '${s.login}', ${s.lab}, ${s.quiz}, ${s.finalScore})">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            // Preview Table (first 5)
+            if (previewBody && idx < 5) {
+                const ptr = document.createElement('tr');
+                ptr.innerHTML = `
+                    <td>${s.id}</td>
+                    <td class="fw-bold">${s.name}</td>
+                    <td><span class="badge bg-light text-dark border">${s.login}</span></td>
+                    <td>Java & Spring Boot</td>
+                    <td>${s.lab}</td>
+                    <td>${s.quiz}%</td>
+                    <td><strong class="text-success">${s.finalScore}</strong></td>
+                    <td><span class="badge ${badgeClass}">${s.status}</span></td>
+                `;
+                previewBody.appendChild(ptr);
+            }
+        });
+
+        document.getElementById('studentCountBadge').innerText = list.length;
+    }
+
+    // Filter Students
+    function filterStudents() {
+        const query = document.getElementById('studentSearchInput').value.toLowerCase().trim();
+        const status = document.getElementById('statusFilter').value;
+
+        const filtered = students.filter(s => {
+            const matchesQuery = s.name.toLowerCase().includes(query) || s.login.toLowerCase().includes(query);
+            const matchesStatus = status === 'ALL' || s.status === status;
+            return matchesQuery && matchesStatus;
+        });
+
+        renderTables(filtered);
+    }
+
+    // Export to Excel using SheetJS
+    function exportToExcel() {
+        const headers = ["№", "Talaba To'liq F.I.Sh", "Login", "Email", "Laboratoriya Balli (100)", "Test Natijasi (%)", "Yakuniy Umumiy Ball", "O'zlashtirish Holati"];
+        const data = [headers];
+
+        students.forEach(s => {
+            data.push([
+                s.id,
+                s.name,
+                s.login,
+                s.email,
+                s.lab,
+                s.quiz + "%",
+                s.finalScore,
+                s.status
+            ]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "32 Talaba Baholar Jurnali");
+
+        // Column widths
+        ws['!cols'] = [
+            { wch: 5 },
+            { wch: 45 },
+            { wch: 20 },
+            { wch: 25 },
+            { wch: 20 },
+            { wch: 18 },
+            { wch: 20 },
+            { wch: 18 }
+        ];
+
+        XLSX.writeFile(wb, "SmartEdu_32_Talaba_Jurnali.xlsx");
+    }
+
+    // Generate Official PDF Transcript for a student using jsPDF
+    function downloadPdfTranscript(name, login, lab, quiz, finalScore) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFillColor(30, 58, 138);
+        doc.rect(0, 0, 210, 25, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("SmartEdu - ELEKTRON TA'LIM TIZIMI", 105, 12, { align: "center" });
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("TALABA REYTING DAFTARCHASI VA BAHOLAR HISOBOTI", 105, 19, { align: "center" });
+
+        // Student Info
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("TALABA MA'LUMOTLARI:", 14, 38);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`F.I.Sh: ${name}`, 14, 46);
+        doc.text(`Login (ID): ${login}`, 14, 52);
+        doc.text(`Guruh: CS-21 | Fakultet: Kompyuter Injiniringi`, 14, 58);
+        doc.text(`Sana: ${new Date().toLocaleDateString('ru-RU')}`, 150, 46);
+        doc.text(`Semestr: 3-semestr`, 150, 52);
+
+        // Grades Table
+        const tableBody = [
+            ["1", "Java va Spring Boot Asoslari", "1-Laboratoriya topshirig'i", `${lab} / 100`, "Baholangan"],
+            ["2", "Java va Spring Boot Asoslari", "Oraliq Nazorat Testi", `${quiz}%`, "Topshirilgan"],
+            ["3", "Ma'lumotlar Bazasi va SQL", "1-Amaliy SQL Vazifasi", "90 / 100", "Baholangan"],
+            ["4", "Web Dasturlash Asoslari", "HTML5 & CSS3 Loyihasi", "95 / 100", "Baholangan"]
+        ];
+
+        doc.autoTable({
+            startY: 66,
+            head: [["#", "Fan Nomi", "Topshiriq / Nazorat", "Ball / Foiz", "Holati"]],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+            styles: { fontSize: 9 }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+
+        // Summary Box
+        doc.setFillColor(241, 245, 249);
+        doc.rect(14, finalY, 182, 18, 'F');
+        doc.setTextColor(30, 58, 138);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text(`UMUMIY AKADEMIK REYTING BALLI: ${finalScore} BALL`, 105, finalY + 11, { align: "center" });
+
+        // Signature & Stamp
+        doc.setTextColor(71, 85, 105);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text("Dekanat / O'quv bo'limi boshlig'i: _______________", 14, finalY + 40);
+        doc.text("Tasdiqlovchi QR-kod & Elektron Muhr: [VERIFIED]", 130, finalY + 40);
+
+        doc.save(`Transcript_${login}.pdf`);
+    }
+
+    function downloadAllTranscriptsZip() {
+        alert("Barcha 32 nafar talabaning reyting varaqalari shakllantirilmoqda. Birinchi talaba (BILOLOV ELYOR) transkripti yuklab olinmoqda...");
+        downloadPdfTranscript(students[0].name, students[0].login, students[0].lab, students[0].quiz, students[0].finalScore);
+    }
+
+    // Quiz Submit Logic
+    function submitQuiz(e) {
+        e.preventDefault();
+        const correctAnswers = { q1: "B", q2: "C", q3: "D", q4: "A", q5: "B" };
+        let correctCount = 0;
+
+        for (let i = 1; i <= 5; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && selected.value === correctAnswers[`q${i}`]) {
+                correctCount++;
+            }
+        }
+
+        const score = correctCount * 20;
+        const alertBox = document.getElementById('quizResultAlert');
+        alertBox.className = 'alert alert-success mt-4';
+        alertBox.innerHTML = `
+            <h5 class="fw-bold"><i class="bi bi-award-fill me-2"></i> Test Muvaffaqiyatli Yakunlandi!</h5>
+            <div>To'g'ri javoblar: <strong>${correctCount} / 5</strong> ta (${score}%)</div>
+            <div>Yakuniy ball: <strong>${score} ball</strong>. Ushbu natija jurnalga avtomatik kiritildi!</div>
+        `;
+        alertBox.classList.remove('d-none');
+        alertBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Chart.js Analytics
+    let chartInstance = null;
+    function initAnalyticsChart() {
+        if (chartInstance) return;
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        const names = students.slice(0, 10).map(s => s.name.split(' ')[0]);
+        const scores = students.slice(0, 10).map(s => s.finalScore);
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Umumiy Ball',
+                    data: scores,
+                    backgroundColor: 'rgba(37, 99, 235, 0.75)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 70,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    function openLessonModal(subject) {
+        alert(subject + " fani bo'yicha 1-mavzu darsi ochilmoqda. Video va o'quv materiallari yuklandi.");
+        showSection('courses');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        renderTables(students);
+    });
+</script>
+
+</body>
+</html>
